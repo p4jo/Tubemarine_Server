@@ -1,0 +1,6 @@
+adafruit-circuitpython-servokit
+adafruit-circuitpython-bno055
+smbus
+jsonpickle
+adafruit-circuitpython-ads1x15
+

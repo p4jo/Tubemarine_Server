@@ -1,0 +1,51 @@
+{
+  "Links": {
+    "type": "ESC",
+    "servoID": 8,
+    "backwardValue": 0.2,
+    "forwardValue": -0.2,
+    "minimalDeviation": 0.06
+  },
+  "Rechts": {
+    "type": "ESC",
+    "servoID": 0,
+    "backwardValue": -0.2,
+    "forwardValue": 0.2,
+    "minimalDeviation": 0.06
+  },
+  "Lenkung": {
+    "type": "steering",
+    "left": "Links",
+    "right": "Rechts"
+  },
+  "Speed": {
+    "type": "speed",
+    "left": "Links",
+    "right": "Rechts"
+  },
+  "Auftriebsmotor": {
+    "type": "ESC",
+    "servoID": 10,
+    "backwardValue": 0.4,
+    "forwardValue": -0.4,
+    "neutralValue": 0,
+    "minimalDeviation": 0.2
+  },
+  "Lampenmotor":{
+    "type": "ESC",
+    "servoID": 11
+  },
+  "Auftrieb": {
+    "type": "ServoESC",
+    "motor": "Auftriebsmotor",
+    "sensorConfig": "{\n      \"16\": -1.0,\n      \"20\": 0.0,\n      \"21\": 1.0,\n      \"0\": \"1.5,7.9\"\n    }",
+    "vMax": 0.0714,
+    "DontTrustZeroOfMotor": false
+  },
+  "Kamera": {
+    "type": "Servo",
+    "servoID": 12,
+    "minValue": 180,
+    "maxValue": 0
+  }
+}
