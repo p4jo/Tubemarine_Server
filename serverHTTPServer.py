@@ -2,6 +2,7 @@
 import json
 import jsonpickle
 import time
+import click
 from http.server import BaseHTTPRequestHandler, HTTPServer#, ThreadingHTTPServer
 
 from MotorSetupController import MotorSetupController
@@ -89,10 +90,14 @@ class HandleRequests(BaseHTTPRequestHandler):
         self.handleJsonRequest(lambda data: handleMotorChange(data, True))
 
 
-
-def run():
+@click.command()
+@click.option("--log-level","--loglevel","-L","-l", default=6)
+@click.option('--sleep', '-s', default=0)
+def run(log_level=6, sleep=0):
+    time.sleep(sleep)
     global motorSetupController
     motorSetupController = MotorSetupController(log=addToCurrentReply)
+    motorSetupController.current.loglevel = log_level
     try:
         # Threading
         HTTPServer((HOST, PORT), HandleRequests).serve_forever()
@@ -103,5 +108,4 @@ def run():
 
 
 if __name__ == "__main__":
-    time.sleep(60)
     run()
