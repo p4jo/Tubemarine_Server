@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 import json
-import sys
-raise ModuleNotFoundError(sys.executable)
 import jsonpickle
 import time
 import click
 from http.server import BaseHTTPRequestHandler, HTTPServer#, ThreadingHTTPServer
 
 from MotorSetupController import MotorSetupController
+import sys
+print(sys.executable)
 HOST = "127.0.0.1"  # Standard loopback interface address (localhost)
 PORT = 6767  # Port to listen on (non-privileged ports are > 1023)
 
