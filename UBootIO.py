@@ -7,10 +7,9 @@ from abc import abstractmethod
 from threading import Thread
 
 # import busio
-import board # CircuitPython:board, not the standard pip board
+# import board # Adafruit.Blinka  board, not the standard pip board !!
 
 #region I2C Addresses and Parameters
-i2c = board.I2C()
 
 Ina3221ThreeCellLipoAkkumesserAddress = 0x42
 AdafruitServoControllerAddress = 0x41
