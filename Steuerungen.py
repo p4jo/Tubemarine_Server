@@ -224,26 +224,19 @@ class InternetSteuerung(Steuerung):
         if message == "stop":
             self.stop()
 
-    def onReceive(self, newData: object):
-        if isinstance(newData, str):
-            d = {'message': newData}
-        elif isinstance(newData, dict):
-            d = newData
-        else:
-            d = {a: getattr(newData, a) for a in dir(newData) if
-                 not a.startswith('__') and not callable(getattr(newData, a))}
-
-        self.schreiben("received: " + str(newData) + "of type " + str(type(newData)), 10)
+    def onReceive(self, newData: dict):
         self.lastConnectionTime = time.time()
 
         # messages
-        sentTime = d.pop("sentTime", time.time())
-        message = d.pop("message", '')
+        sentTime = newData.pop("sentTime", time.time())
+        message = newData.pop("message", '')
+        self.schreiben("received: " + str(newData), 10)
+
         self.handleMessage(message)
 
         # motorValues
-        for key in d:
-            value = d[key]
+        for key in newData:
+            value = newData[key]
             self.schreiben(str(key) + ": " + str(value) + " of headerType " + str(type(value)), 15)
             if key in self.lastSentTime and sentTime < self.lastSentTime[key]:
                 self.schreiben(

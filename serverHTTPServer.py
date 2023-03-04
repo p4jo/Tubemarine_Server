@@ -82,14 +82,33 @@ class HandleRequests(BaseHTTPRequestHandler):
 
     def do_POST(self):  # when POST request reaches server this is called #asynchronously
         # motorSetupController.current.log("do_POST called")
-        self.handleJsonRequest(lambda data: motorSetupController.current.onReceive(data))
+        def handle(d):
+            message = d.get('message','')
+            if message == 'GET_MOTOR_SETTINGS':
+                d.pop('message')
+                return motorSetupController.currentJSON
+            if message == 'SET_MOTOR_SETTINGS':
+                d.pop('message')
+                return handleMotorChange(d, False)
+            return motorSetupController.current.onReceive(d)
+
+        self.handleJsonRequest(lambda data: handle(convert(data)))
 
     def do_PUT(self):
-        self.handleJsonRequest(lambda data: handleMotorChange(data, False))
+        self.handleJsonRequest(lambda data: handleMotorChange(convert(data), False))
 
     def do_DELETE(self):
-        self.handleJsonRequest(lambda data: handleMotorChange(data, True))
+        self.handleJsonRequest(lambda data: handleMotorChange(convert(data), True))
 
+def convert(rawData):                
+    if isinstance(rawData, str):
+        d = {'message': rawData}
+    elif isinstance(rawData, dict):
+        d = rawData
+    else:
+        d = {a: getattr(rawData, a) for a in dir(rawData) if
+            not a.startswith('__') and not callable(getattr(rawData, a))}
+    return d
 
 @click.command()
 @click.option("--log-level","--loglevel","-L","-l", default=6)
