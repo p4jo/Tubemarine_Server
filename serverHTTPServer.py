@@ -16,7 +16,7 @@ def addToCurrentReply(text):
     global currentReply
     currentReply += text
 
-motorSetupController = None
+motorSetupController:MotorSetupController = None
 
 
 def handleMotorChange(obj, force = False):
@@ -86,6 +86,8 @@ class HandleRequests(BaseHTTPRequestHandler):
             message = d.get('message','')
             if message == 'GET_MOTOR_SETTINGS':
                 d.pop('message')
+                motorSetupController.current.schreiben('Loading current motor settings', 3)
+                motorSetupController.current.schreiben('Current motor settings: ' + str(motorSetupController.currentJSON), 5)
                 return motorSetupController.currentJSON
             if message == 'SET_MOTOR_SETTINGS':
                 d.pop('message')
