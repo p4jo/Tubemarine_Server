@@ -214,6 +214,8 @@ class InternetSteuerung(Steuerung):
         # self.waitingForLostConnectionThread = asyncio.ensure_future(self.run_async())
         # asyncio.get_event_loop().run_until_complete(self.waitingForLostConnectionThread)
 
+        if not Path(InternetSteuerung.logFile).parent.exists():
+            InternetSteuerung.logFile = Path(__file__).parent / 'InternetSteuerung.log'
         logging.basicConfig(filename = InternetSteuerung.logFile, level = self.loglevel)
 
     def handleMessage(self, message: str):
@@ -262,7 +264,7 @@ class InternetSteuerung(Steuerung):
                     self.handleMessage(f"{key}: {value}")
 
         self.oldData['akkuHealth'] = Akkumesser.akkustand()
-        self.oldData['sensorData'] = []
+        self.oldData['sensorData'] = {d: getattr(Lagesensor, d, 'null') for d in ['linear_acceleration', 'gravity', 'gyro', 'euler', 'magnetic', 'temperature']}
         self.oldData['log'] = self.currentLog
         self.currentLog = ''
         for key in self.motoren:

@@ -11,6 +11,7 @@ class Motor(object):
         # setze echten Motor o.ä. auf _mapping(x)
 
     def _mapping(self, x: float):
+        """[xMin, xMax] --> [backwardsValue, forwardValue]: x = Steuerung value -> Motor value """
         if x > self.xMax:
             x = self.xMax
         if x < self.xMin:
@@ -27,7 +28,7 @@ class Motor(object):
         return self._mapping(self.xVal)
 
     def _inverse_mapping(self, t: float):
-
+        """ [backwardsValue, forwardValue] --> [xMin, xMax]: Motor value -> x = Steuerung value"""
         x = (t - self.neutralPlus) / self.xFactor
         if x <= 0: # t gehört eigentlich nicht ins positive Regime
             x = (t - self.neutralMinus) / self.xFactor

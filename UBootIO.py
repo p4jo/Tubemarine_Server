@@ -23,6 +23,13 @@ VoltmeterSampleRate_Hz = 64 # 8..860, default 128
 VoltmeterWatchThreshold_cm = 0.05
 
 #endregion
+try:
+    import board
+    i2c = board.I2C()
+except NotImplementedError as e:
+    i2c = None
+    print("NO I2C DETECTED ON THIS BOARD:", e)
+    print("NOTHING WILL WORK!!")
 
 #region PhysicalMotors
 class DummyMotorInterface:
@@ -261,7 +268,12 @@ except Exception as exception:
             self.bits = 16
     ADS_Instance = DummyADS1x15() 
     
-    
+    class AnalogIn: # Dummy
+        def __init__(self, *_):
+            pass
+        def voltage(self):
+            return 0    
+
 class Potentiometer(Wertüberwacher):
     def __init__(self, pin, callback=None):
         self.pin = pin
