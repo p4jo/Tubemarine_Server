@@ -269,9 +269,7 @@ except Exception as exception:
     
     class AnalogIn: # Dummy
         def __init__(self, *_):
-            pass
-        def voltage(self):
-            return 0    
+            self.voltage=0   
 
 class Potentiometer(Wertüberwacher):
     def __init__(self, pin, callback=None):

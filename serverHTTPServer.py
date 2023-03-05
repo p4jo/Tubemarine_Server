@@ -77,7 +77,7 @@ class HandleRequests(BaseHTTPRequestHandler):
         #    b"<!DOCTYPE html><html><body><h1>Tubemarine-Server</h1><p>This server is made to handle POST requests with Content-Type json. It should be a dictionary with the name of registered motors as keys and their new value as number</p></body></html>")
 
         self._set_headers("json")
-        self.wfile.write(bytes(jsonpickle.encode(motorSetupController.currentJSON), "utf-8"))
+        self.wfile.write(bytes(jsonpickle.encode(motorSetupController.currentDict), "utf-8"))
 
 
     def do_POST(self):  # when POST request reaches server this is called #asynchronously
@@ -87,8 +87,8 @@ class HandleRequests(BaseHTTPRequestHandler):
             if message == 'GET_MOTOR_SETTINGS':
                 d.pop('message')
                 motorSetupController.current.schreiben('Loading current motor settings', 3)
-                motorSetupController.current.schreiben('Current motor settings: ' + str(motorSetupController.currentJSON), 5)
-                return motorSetupController.currentJSON
+                motorSetupController.current.schreiben('Current motor settings: ' + str(motorSetupController.currentDict), 5)
+                return motorSetupController.currentDict
             if message == 'SET_MOTOR_SETTINGS':
                 d.pop('message')
                 return handleMotorChange(d, False)

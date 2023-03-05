@@ -4,7 +4,6 @@ This can be remote controlled with
 https://github.com/p4jo/Tubemarine_Controller (as of yet not public -- will come sooner or later)
 
 ## Installation
-Replace `python3` with a working python installation (I think >=3.7 is required)
 ```
 cd /home/pi
 clone https://github.com/p4jo/Tubemarine_Server.git
@@ -12,6 +11,7 @@ cd Tubemarine_Server
 python3 -m venv .venv
 .venv/bin/python3 -m pip install -r requirements.txt
 ```
+You may want to replace `python3` with a working python installation (I think >=3.7 is required)
 ### Test
 Running `Steuerung.py` starts a console controller and allows you to test the motors
 ```
@@ -36,4 +36,4 @@ tail -f /home/pi/Internetsteuerung.log
 ```
 
 ## Configuration
-In `MotorConfigurations`. To see how it works, see `MotorSetupController.py` 
+In `MotorConfigurations`. To see how it works, see `Motoren.py > loadMotorConfig` and the subclasses therein.
