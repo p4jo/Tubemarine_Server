@@ -84,10 +84,15 @@ class ESCMotor(Motor):
 
         if abs(x - self.xVal) > 1e-5:
             # braucht recht lange
-            self.motor.throttle = newVal
+            if newVal is None or x == 0.0:
+                self.motor.fraction = None
+                print("set to None when stopping")
+                self.xVal = 0.0
+            else:
+                self.motor.throttle = newVal
+                self.xVal = self._inverse_mapping(self.motor.throttle)
+                # Da das selbst eine Logik hat und nur einen nahe liegenden Wert nimmt.
 
-            # Da das selbst eine Logik hat und nur einen nahe liegenden Wert nimmt.
-            self.xVal = self._inverse_mapping(self.motor.throttle)
             # if abs(self.xVal) < self.xZeroThreshold:
             #     self.xVal = 0.0
 
@@ -96,7 +101,11 @@ class ESCMotor(Motor):
 
     def value(self):
         try:
-            return self.motor.throttle
+            a = self.motor.fraction
+            if a is None:
+                return 0.0
+            return a*2-1
+            # return self.motor.throttle
         except:
             print("WTF, ich konnte den Wert vom Motor nicht auslesen")
             return 0.0
@@ -210,8 +219,9 @@ class ServoESCMotor(ServoMotor):
 
     def reachedValue(self, xVal):
         self.steuerung.schreiben(f"Sensor sagt mir, ich bin bei {xVal} angekommen. Ich bin ein ServoESC.", 11)
-        if self.motor.xVal > 0:
+        if (self.motor.xVal > 0 and xVal >= 1) or (self.motor.xVal < 0 and xVal <= -1):
             self.motor.stop()
+            print('STOPPED AT BORDER')
         # stopped but moved nonetheless. Could be because the ESC has a wrong zero!
         if self.DontTrustZeroOfMotor and self.isStopped() and abs(self.xVal - xVal) > 1e-5:
             self.motor.correctZero((xVal - self.xVal)/((time.time() - self.lastValueUpdate) * self.vMax ))
@@ -235,7 +245,7 @@ class ServoESCMotor(ServoMotor):
         if newVal > 1:
             newVal = 1
         if newVal < -1:
-            newVal = 1
+            newVal = -1
         self.xVal = newVal
         self.lastValueUpdate = newTime
         if not self.passive:
@@ -283,7 +293,8 @@ class ServoESCMotor(ServoMotor):
             # await asyncio.sleep(sleepTime)
 
     def value(self):
-        return self.xGoal
+        # return self.xGoal
+        return self.xVal
 
     def makePassive(self):
         self.passive = True

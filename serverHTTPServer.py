@@ -61,7 +61,7 @@ class HandleRequests(BaseHTTPRequestHandler):
         except BrokenPipeError:
             motorSetupController.current.schreiben(f"Abgelaufene Verbindung, meine Antwort wäre gewesen: {reply}", 2)
         timeSinceBegin = time.time() - begin
-        if timeSinceBegin > 0.03:
+        if timeSinceBegin > 0.05:
             motorSetupController.current.schreiben(f"Very long calculation: {timeSinceBegin} s.", 1)
             
             
