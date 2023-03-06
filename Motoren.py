@@ -62,8 +62,8 @@ class ESCMotor(Motor):
 
         self.OnSet.append(stopSlowOnSet)
 
-        # self.thread = Thread(target=run_async)
-        # self.thread.start()
+        self.thread = Thread(target=run_async)
+        self.thread.start()
 
     def __repr__(self):
         return f"ESCMotor(physicalMotor={self.motor},{os.linesep}\tx: {self.xMin:.3G}..(±{self.xZeroThreshold:.3G})..{self.xMax:.3G}, output: {self._mapping(self.xMin):.3G}..({self._mapping(0):.3G}±{self.minimalDeviation:.3G})..{self._mapping(self.xMax):.3G})"
@@ -84,10 +84,15 @@ class ESCMotor(Motor):
 
         if abs(x - self.xVal) > 1e-5:
             # braucht recht lange
-            self.motor.throttle = newVal
+            if newVal is None or x == 0.0:
+                self.motor.fraction = None
+                print("set to None when stopping")
+                self.xVal = 0.0
+            else:
+                self.motor.throttle = newVal
+                self.xVal = self._inverse_mapping(self.motor.throttle)
+                # Da das selbst eine Logik hat und nur einen nahe liegenden Wert nimmt.
 
-            # Da das selbst eine Logik hat und nur einen nahe liegenden Wert nimmt.
-            self.xVal = self._inverse_mapping(self.motor.throttle)
             # if abs(self.xVal) < self.xZeroThreshold:
             #     self.xVal = 0.0
 
@@ -96,7 +101,11 @@ class ESCMotor(Motor):
 
     def value(self):
         try:
-            return self.motor.throttle
+            a = self.motor.fraction
+            if a is None:
+                return 0.0
+            return a*2-1
+            # return self.motor.throttle
         except:
             print("WTF, ich konnte den Wert vom Motor nicht auslesen")
             return 0.0
@@ -156,8 +165,11 @@ class ServoESCMotor(ServoMotor):
                  ):
         """
             servoID is the id of the actual motor on Adafruit, 
-            limitSwitchesConfig is a dict: pin -> xVal where pin is the GPIO pin of a switch and xVal is the value that this ServoESCMotor is on when the switch is activated.
-            An entry pin -> "{min},{max}" stands for a Potentiometer (Voltmeter pin {pin}) with xVal <-> potentiometer.value of -1 <-> {min}, 1 <-> {max}
+            limitSwitchesConfig is a dict: 
+                pin -> xVal where pin is the GPIO pin of a switch and xVal is the value that this ServoESCMotor is on when the switch is activated.
+                pin -> "*", "poti" etc. stands for a Potentiometer (Voltmeter pin {pin}) with xVal <-> potentiometer.value of -1 <-> {min}, 1 <-> {max}
+                "min" or "start" -> absVal_someUnit - potentiometer reports values in this range (or larger)
+                "max" or "end" -> absVal_someUnit
         """
         Motor.__init__(self, minValue, maxValue, inc = inc, neutralValue = neutralValue, steuerung = steuerung)
         self.xValLastCorrected = time.time() - 100000
@@ -173,32 +185,47 @@ class ServoESCMotor(ServoMotor):
         self.equalThreshold = self.xInc / 3.0
         self.transitionWidth = self.xInc * 2
         self.xGoal = 0
+        self.start_cm = 0
+        self.end_cm = 1
+        self.slope = 2
+        self.potentiometer = None
 
         if isinstance(sensorConfig, str):
             sensorConfig = json.loads(sensorConfig)
 
         if sensorConfig is not None:
             for key in sensorConfig:
+                if 'max' in key or 'end' in key:
+                    self.end_cm = float(sensorConfig[key])
+                elif 'min' in key or 'start' in key:
+                    self.start_cm = float(sensorConfig[key])
+            if self.start_cm == self.end_cm:
+                self.steuerung.schreiben(f'start = end = {self.start_cm}(in absolute units in your sensor config). Set start to 0!')
+                self.start_cm = 0
+            self.slope = 2 / (self.end_cm - self.start_cm)
+            for key in sensorConfig:
+                if 'max' in key or 'end' in key or 'min' in key or 'start' in key:
+                    continue
                 try:
                     pin = int(key)
                 except:
-                    print("The keys of sensorConfig must be integers. sensor Config was", sensorConfig)
-                else:
-                    try:
-                        xVal = float(sensorConfig[key])
-                        self.limitSwitches.append(Schalter(pin=pin, callback=lambda: self.reachedValue(xVal)))
-                    except:
-                        try:
-                            min, max = sensorConfig[key].split(",")
-                            min = float(min)
-                            max =  float(max)
-                            diff = max - min
-                            slope = 2/diff
-                            def callback(value):
-                                self.reachedValue(-1 + slope * (value - min))
-                            self.limitSwitches.append(Potentiometer(pin=pin, callback=callback))
-                        except Exception as e:
-                            print("Couldn't understand sensor Config", sensorConfig[key], "Error: ", e)
+                    self.steuerung.schreiben(f"The keys of sensorConfig must be integers corresponding to pin numbers (or max, min). sensor Config was {sensorConfig}")
+                    continue
+                c = str(sensorConfig[key])
+                c_stripped = c.strip('abcdefghijklmnopqrstuvwxyz') # you can specify absolute positions (in whatever units)
+                
+                try: # Interpret as pin for a limitSwitch
+                    xVal = float(c_stripped)
+                    if c_stripped != c:
+                        xVal = (xVal - self.start_cm)/(self.end_cm - self.start_cm)
+                    self.limitSwitches.append(Schalter(pin=pin, callback=lambda: self.reachedValue(xVal)))
+                except:
+                    if '*' in c or 'p' in c or 'P' in c: # Interpret as pin for Potentiometer
+                        def callback(value):
+                            self.reachedValue(-1 + self.slope * (value - self.start_cm))
+                        self.potentiometer = Potentiometer(pin=pin, callback=callback)
+                    else:
+                        self.steuerung.schreiben(f"Couldn't understand sensor Config with key {key} and value {c}", 1)
 
 
         self.activate()
@@ -210,8 +237,9 @@ class ServoESCMotor(ServoMotor):
 
     def reachedValue(self, xVal):
         self.steuerung.schreiben(f"Sensor sagt mir, ich bin bei {xVal} angekommen. Ich bin ein ServoESC.", 11)
-        if self.motor.xVal > 0:
+        if (self.motor.xVal > 0 and xVal >= 1) or (self.motor.xVal < 0 and xVal <= -1):
             self.motor.stop()
+            print('STOPPED AT BORDER')
         # stopped but moved nonetheless. Could be because the ESC has a wrong zero!
         if self.DontTrustZeroOfMotor and self.isStopped() and abs(self.xVal - xVal) > 1e-5:
             self.motor.correctZero((xVal - self.xVal)/((time.time() - self.lastValueUpdate) * self.vMax ))
@@ -221,6 +249,8 @@ class ServoESCMotor(ServoMotor):
         self.xValLastCorrected = time.time()
 
     def _set_internal(self, x: float = 0):
+        if x < -1: x = -1
+        elif x > 1: x = 1
         self.xGoal = x
         self.activate()
         self.updateMotor()
@@ -229,13 +259,13 @@ class ServoESCMotor(ServoMotor):
         newTime = time.time()
         if newVal is None:
             if len(self.limitSwitches) > 0 and hasattr(self.limitSwitches[-1], "location"):
-                newVal = self.limitSwitches[-1].location()
+                newVal = -1 + self.slope * self.limitSwitches[-1].location()
             else:
                 newVal = self.xVal + (newTime - self.lastValueUpdate) * self.vMax * self.motor.xVal  # Approximation
         if newVal > 1:
             newVal = 1
         if newVal < -1:
-            newVal = 1
+            newVal = -1
         self.xVal = newVal
         self.lastValueUpdate = newTime
         if not self.passive:
@@ -283,7 +313,8 @@ class ServoESCMotor(ServoMotor):
             # await asyncio.sleep(sleepTime)
 
     def value(self):
-        return self.xGoal
+        # return self.xGoal
+        return self.xVal
 
     def makePassive(self):
         self.passive = True
@@ -302,8 +333,10 @@ def loadMotorConfig(steuerung, config: Dict[str, Dict[str, str]]):
 
     for name in config:
         c = config[name]
-        t = c['type'].lower().strip()
-        motor: Motor
+        if 'type' not in c or c['type'] is None:
+            t = 'esc' # TODO THIS IS A HOTFIX FOR A CURRENT APP
+        else:
+            t = c['type'].lower().strip()
         if t.startswith("servoesc"):
             servoESCs.append(name)
         elif t.startswith("steering") or t.startswith("speed"):
@@ -316,11 +349,6 @@ def loadMotorConfig(steuerung, config: Dict[str, Dict[str, str]]):
         else:
             raise Exception(f"Wrong type in Motor definition json: {c['type']}. Supported: ESC, Servo, ServoESC (acts like a servo but is an ESC with position measurement), Steering, Speed (fake motors controlling ESCs)")
 
-    for name in servoESCs:
-        c = config[name]
-        # noinspection PyTypeChecker
-        c['motor'] = res[c['motor']]
-        res[name] = ServoESCMotor(steuerung=steuerung, **c)
 
     # sort speed/steering motors with the same left/right together
     leftRightToSpeedSteering = {}
@@ -353,5 +381,13 @@ def loadMotorConfig(steuerung, config: Dict[str, Dict[str, str]]):
             res[speedMotorName] = speedFakeMotor
         if len(steeringMotorConfig) > 0:
             res[steeringMotorName] = steeringFakeMotor
+
+    for name in servoESCs:
+        c = config[name]
+        # noinspection PyTypeChecker
+        motorName = c['motor']
+        c['motor'] = res[c['motor']] # BAD! DO NOT CHANGE c, IT GETS RETURNED TO THE APP!!
+        res[name] = ServoESCMotor(steuerung=steuerung, **c)
+        c['motor'] = motorName
 
     return res

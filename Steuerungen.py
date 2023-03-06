@@ -49,11 +49,14 @@ class Steuerung(object):
     def stopAndQuit(self): # Sollte WIRKLICH aufgerufen werden
         self.schreiben("Stoppe alle Motoren...")
         self.stop()
+        self.quit()
+
+    def quit(self):
+        """Normally, you should call stopAndQuit instead (or stop yourself)"""
         self.schreiben("Räume extra Threads etc. auf")
         self.cleanupForExit()
         for f in self.onExit:
             f()
-        exit(0)
 
     def cleanupForExit(self):
         pass
@@ -156,6 +159,7 @@ class Konsolensteuerung(Steuerung):
             pass
         self.schreiben("Abgebrochen durch Strg-C")
         self.stopAndQuit()
+        exit(0)
 
     def updateScreen(self):
         clearConsoleScreen()
@@ -198,6 +202,8 @@ class InternetSteuerung(Steuerung):
 
     def schreiben(self, text: str, level: int = 1):
         logging.log(msg = text, level = level)
+        if len(text) > 100:
+            text = text[0:47] + '...' + text[-50:]
         if level <= self.loglevel:
             self.currentLog += text.strip() + '\n'
 
@@ -258,7 +264,12 @@ class InternetSteuerung(Steuerung):
                     self.handleMessage(f"{key}: {value}")
 
         self.oldData['akkuHealth'] = Akkumesser.akkustand()
-        self.oldData['sensorData'] = {d: getattr(Lagesensor, d, 'null') for d in ['linear_acceleration', 'gravity', 'gyro', 'euler', 'magnetic', 'temperature']}
+        self.oldData['sensorData'] = dict()
+        for d in ['linear_acceleration', 'gravity', 'gyro', 'euler', 'magnetic', 'temperature']:
+            r = getattr(Lagesensor, d, 'null') 
+            if isinstance(r, tuple):
+                r = list(r) # jsonpickle encodes tuples weirdly [maybe use jsonpickle options like unpickleable or preferred_backend=json]
+            self.oldData['sensorData'][d] = r
         self.oldData['log'] = self.currentLog
         self.currentLog = ''
         for key in self.motoren:

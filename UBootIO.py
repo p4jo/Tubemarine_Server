@@ -3,6 +3,7 @@ import atexit
 import os
 import platform
 import time
+import numpy as np
 from abc import abstractmethod
 from threading import Thread
 
@@ -19,7 +20,7 @@ VoltmeterGain = 1.0 # default 1
 VoltmeterPotentiometerPin = 0 # 0..3
 VoltmeterWatchInterval_s = 0.3
 VoltmeterSampleRate_Hz = 64 # 8..860, default 128
-VoltmeterWatchThreshold_cm = 0.05
+VoltmeterWatchThreshold_cm = 0.15
 
 #endregion
 try:
@@ -272,11 +273,17 @@ except Exception as exception:
             self.voltage=0   
 
 class Potentiometer(Wertüberwacher):
-    def __init__(self, pin, callback=None):
+    def __init__(self, pin, callback=None, averageTime=0.3):
         self.pin = pin
         self.Voltmeter = AnalogIn(ADS_Instance, pin)
         super().__init__(name=f"Potentiometer {pin}", callback=callback)
         self.thread = None
+        self.averageTime = averageTime
+
+        self.errors=0
+        self.worked=0
+        self.lastValues= np.array([],dtype='float')
+        self.lastTimes = np.array([],dtype='float')
 
     def setup(self, callback):
         def async_run():
@@ -305,8 +312,28 @@ class Potentiometer(Wertüberwacher):
 
     def location(self):
         """ Die Position des Schiebers in cm, zwischen 0.09 und 9.75 (eigentlich 0 und 9.7). """
-        U = self.Voltmeter.voltage
-        return -1.8686 * U**3 + 0.0998 * U**2 - 5.1519 * U + 9.7939 # Interpolation als Polynom 3. Grades der 10 Messwerte
+        try:
+            U = self.Voltmeter.voltage
+        except OSError as e:
+            if e.errno == 121:
+                self.errors += 1
+            else: raise
+        else:
+            self.worked += 1
+
+            val = -1.8686 * U**3 + 0.0998 * U**2 - 5.1519 * U + 9.7939 # Interpolation als Polynom 3. Grades der 10 Messwerte
+
+            t = time.time()
+            i = 0
+            while i < len(self.lastTimes) and self.lastTimes[i]  < t - self.averageTime:
+                i += 1
+            self.lastTimes = np.append(self.lastTimes, t)[i:]
+            self.lastValues =  np.append(self.lastValues, val)[i:]
+
+        if (self.worked + self.errors) % 10 == 0 and self.worked < 8 * self.errors:
+            print(f"{self.worked} worked, {self.errors} errors when reading voltmeter value")
+            
+        return np.average(self.lastValues).item()
 
     def voltage(self):
         return self.Voltmeter.voltage

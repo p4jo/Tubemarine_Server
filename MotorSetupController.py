@@ -19,27 +19,33 @@ class MotorSetupController:
         self.log = log
 
     def reloadWithNewConfig(self, force: bool = False):        
+        self.current.stop()
         try:
-            self.current.schreiben("CLOSING DUE TO UPDATED MOTOR CONFIG")
-            self.current.stopAndQuit()
-        except Exception as e:
-            self.log("Old Steuerung could not be stopped properly. You can force it. Exception: " + e)
-            if not force:
-                return
-
-        try:
-            self.current = self.cls(initializeMotors=self.currentDict)
+            newSteuerung = self.cls(initializeMotors=self.currentDict)
         except Exception as e:
             self.log(f"New Steuerung could not be setup properly with the transmitted motor config. You can force it. Exception: {e}")
-            try:
-                self.reset(force = True)
-            except:
-                self.log("ERROR ALSO WHEN RESETTING")
-            return
+            # try:
+            #     self.reset(force = True)
+            # except:
+            #     self.log("ERROR ALSO WHEN RESETTING")
+            # return
+            if not force: return False
+
+        try:
+            self.current.schreiben("CLOSING DUE TO UPDATED MOTOR CONFIG")
+            self.current.quit()
+        except Exception as e:
+            self.log("Old Steuerung could not be stopped properly.  Exception: " + e)# You can force it.
+            # if not force:
+            #     return
+        self.current = newSteuerung
+        return True
+
         
     def load(self, newDict: dict, force):
         self._updateDict(newDict)
-        self.reloadWithNewConfig(force=force)
+        if not self.reloadWithNewConfig(force=force):
+            return
         self.current.schreiben("RESTARTED WITH NEW MOTOR CONFIG. ")
         self.current.schreiben("New config: " + str(newDict), 3)
         newPath = CONFIGS_PATH / datetime.datetime.now().strftime('Config %Y.%m.%d_%H_%M_%S.json')
@@ -59,6 +65,13 @@ class MotorSetupController:
     def _updateDict(self, newDict):
         for key in newDict:
             c = newDict[key]
-            # if key not in self.currentDict:
-            self.currentDict[key] = c
+            assert isinstance(c, dict)
+            if not key in self.currentDict:
+                self.currentDict[key] = {}
+            for k in c:
+                try:
+                    self.currentDict[key][k] = float(c[k])
+                except:
+                    self.currentDict[key][k] = c[k]
+
             

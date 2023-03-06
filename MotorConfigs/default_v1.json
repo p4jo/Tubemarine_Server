@@ -38,7 +38,7 @@
   "Auftrieb": {
     "type": "ServoESC",
     "motor": "Auftriebsmotor",
-    "sensorConfig": "{\n      \"16\": -1.0,\n      \"20\": 0.0,\n      \"21\": 1.0,\n      \"0\": \"1.5,7.9\"\n    }",
+    "sensorConfig": "{\n   \"min\":1.5, \"max\":7.9,    \"16\": -1.0,\n      \"20\": 0.0,\n      \"21\": 1.0,\n      \"0\": \"*\" \n    }",
     "vMax": 0.0714,
     "DontTrustZeroOfMotor": false
   },
