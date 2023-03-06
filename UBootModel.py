@@ -41,9 +41,9 @@ class Motor(object):
         #     x = self.xMin
         return x
 
-    def __init__(self, backwardValue: float = -1.0, forwardValue: float = 1.0, neutralValue: Optional[float] = None, inc: Optional[float] = None, steuerung = None, minimalDeviation = 0.0, xZeroThreshold: Optional[float] = None, **_):
+    def __init__(self, backwardValue: float = -1.0, forwardValue: float = 1.0, neutralValue: Optional[float] = None, inc: Optional[float] = None, steuerung = None, minimalDeviation: Optional[float] = 0.0, xZeroThreshold: Optional[float] = None, **_):
 
-        self.minimalDeviation = abs(minimalDeviation)
+        self.minimalDeviation = abs(minimalDeviation or 0.0)
 
         signum = (1 if forwardValue >= backwardValue else -1)
 

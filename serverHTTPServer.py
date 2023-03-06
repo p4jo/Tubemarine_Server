@@ -57,9 +57,11 @@ class HandleRequests(BaseHTTPRequestHandler):
         #############################
         # motorSetupController.current.log("My reply:", reply)
         try:
-            self.wfile.write(bytes(jsonpickle.encode(reply), "utf-8"))
+            reply_encoded = jsonpickle.encode(reply)
+            self.wfile.write(bytes(reply_encoded, "utf-8"))
         except BrokenPipeError:
-            motorSetupController.current.schreiben(f"Abgelaufene Verbindung, meine Antwort wäre gewesen: {reply}", 2)
+            motorSetupController.current.schreiben(f"Abgelaufene Verbindung.", 4)
+            motorSetupController.current.schreiben(f"Meine Antwort wäre gewesen: {reply}", 10)
         timeSinceBegin = time.time() - begin
         if timeSinceBegin > 0.05:
             motorSetupController.current.schreiben(f"Very long calculation: {timeSinceBegin} s.", 1)
@@ -71,13 +73,13 @@ class HandleRequests(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        #self._set_headers("html")
-        ## motorSetupController.current.log("Got a GET request")
-        #self.wfile.write(
-        #    b"<!DOCTYPE html><html><body><h1>Tubemarine-Server</h1><p>This server is made to handle POST requests with Content-Type json. It should be a dictionary with the name of registered motors as keys and their new value as number</p></body></html>")
+        self._set_headers("html")
+        # motorSetupController.current.log("Got a GET request")
+        self.wfile.write(
+           b"<!DOCTYPE html><html><body><h1>Tubemarine-Server</h1><p>This server is made to handle POST requests with Content-Type json. It should be a dictionary with the name of registered motors as keys and their new value as number</p></body></html>")
 
-        self._set_headers("json")
-        self.wfile.write(bytes(jsonpickle.encode(motorSetupController.currentDict), "utf-8"))
+        # self._set_headers("json")
+        # self.wfile.write(bytes(jsonpickle.encode(motorSetupController.currentDict), "utf-8"))
 
 
     def do_POST(self):  # when POST request reaches server this is called #asynchronously
@@ -127,6 +129,7 @@ def run(log_level=6, sleep=0):
         print("Closed by KeyboardInterrupt")
         if motorSetupController and motorSetupController.current:
             motorSetupController.current.stopAndQuit()
+        exit(0)
 
 
 if __name__ == "__main__":

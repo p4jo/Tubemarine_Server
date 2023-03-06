@@ -333,7 +333,7 @@ class Potentiometer(Wertüberwacher):
         if (self.worked + self.errors) % 10 == 0 and self.worked < 8 * self.errors:
             print(f"{self.worked} worked, {self.errors} errors when reading voltmeter value")
             
-        return np.average(self.lastValues)
+        return np.average(self.lastValues).item()
 
     def voltage(self):
         return self.Voltmeter.voltage
