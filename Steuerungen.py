@@ -197,7 +197,7 @@ class Konsolensteuerung(Steuerung):
 class InternetSteuerung(Steuerung):
     """Verarbeitet Befehle, die von der Tubemarine-App kommen."""
 
-    lostConnectionTimeout: float = 2
+    lostConnectionTimeout: float = 10
     logFile = "/home/pi/InternetSteuerung.log"
 
     def schreiben(self, text: str, level: int = 1):
@@ -215,7 +215,7 @@ class InternetSteuerung(Steuerung):
 
         self.currentLog = ""
 
-        self.lastConnectionTime = time.time() - 10000
+        self.lastConnectionTime = time.time() + 10
         self.waitingForLostConnectionThread: Optional[Thread] = Thread(target = self.run_async)
         self.waitingForLostConnectionThread.start()
         # self.waitingForLostConnectionThread = asyncio.ensure_future(self.run_async())
@@ -280,13 +280,14 @@ class InternetSteuerung(Steuerung):
     def run_async(self):
         try:
             while self.running:
-                waitTime = time.time() - (self.lastConnectionTime + self.lostConnectionTimeout)
+                waitTime =  self.lastConnectionTime + self.lostConnectionTimeout - time.time()
                 if waitTime > 1E-5:
                     time.sleep(waitTime)
                     # await asyncio.sleep(waitTime)
                 else:
                     self.OnLostConnection()
-                    time.sleep(self.lostConnectionTimeout)
+                    self.lastConnectionTime = time.time()
+                    # time.sleep(self.lostConnectionTimeout)
                     # await asyncio.sleep(waitTime)
         except:
             self.stop()
@@ -295,6 +296,7 @@ class InternetSteuerung(Steuerung):
 
     def OnLostConnection(self):
         self.stop()
+        self.schreiben('STOPPED BECAUSE OF DISCONNECT')
 
 
     def cleanupForExit(self):

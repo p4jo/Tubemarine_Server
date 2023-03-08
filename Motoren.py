@@ -33,7 +33,7 @@ class ESCMotor(Motor):
         self.slowTarget = 0.0 # not active yet
         try:
             # Sollte Fehler schmeißen, wenn servoID nicht 0 bis 15 ist.
-            self.motor = PhysicalMotors.continuous_servo[servoID]
+            self.motor = PhysicalMotors.continuous_servo[int(servoID)]
         except ZeroDivisionError:
             print("ES GAB EINEN INTERNEN FEHLER BEIM SETZEN VON WERTEN FÜR DEN ADAFRUIT CONTROLLER")
             self.motor = DummyMotorInterface()
@@ -128,7 +128,7 @@ class ServoMotor(Motor):
     def __init__(self, servoID: int, minValue: float, maxValue: float, neutralValue: Optional[float] = None, inc: Optional[float] = None, steuerung = None, **_):
         super().__init__(minValue, maxValue, inc = inc, neutralValue = neutralValue, steuerung = steuerung)
         try:
-            self.motor = PhysicalMotors.servo[servoID]  # Sollte Fehler schmeißen, wenn servoID nicht 0 bis 15 ist.
+            self.motor = PhysicalMotors.servo[int(servoID)]  # Sollte Fehler schmeißen, wenn servoID nicht 0 bis 15 ist.
         except ZeroDivisionError:
             print("ES GAB EINEN INTERNEN FEHLER BEIM SETZEN VON WERTEN FÜR DEN ADAFRUIT CONTROLLER")
             self.motor = DummyMotorInterface()

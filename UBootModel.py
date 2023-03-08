@@ -43,11 +43,15 @@ class Motor(object):
 
     def __init__(self, backwardValue: float = -1.0, forwardValue: float = 1.0, neutralValue: Optional[float] = None, inc: Optional[float] = None, steuerung = None, minimalDeviation: Optional[float] = 0.0, xZeroThreshold: Optional[float] = None, **_):
 
+        if backwardValue is None or backwardValue == '':
+            backwardValue = -1.0
+        if forwardValue is None or forwardValue == '':
+            forwardValue = -1.0
         self.minimalDeviation = abs(minimalDeviation or 0.0)
 
         signum = (1 if forwardValue >= backwardValue else -1)
 
-        if neutralValue is None:
+        if neutralValue is None or neutralValue == '':
             self.neutralValue = (forwardValue + backwardValue) / 2
         else:
             self.neutralValue = neutralValue

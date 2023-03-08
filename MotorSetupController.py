@@ -43,13 +43,13 @@ class MotorSetupController:
 
         
     def load(self, newDict: dict, force):
-        self._updateDict(newDict)
+        self._updateDict(newDict) # TODO Types are missing
         if not self.reloadWithNewConfig(force=force):
             return
         self.current.schreiben("RESTARTED WITH NEW MOTOR CONFIG. ")
         self.current.schreiben("New config: " + str(newDict), 3)
         newPath = CONFIGS_PATH / datetime.datetime.now().strftime('Config %Y.%m.%d_%H_%M_%S.json')
-        json.dump(newDict, newPath)
+        json.dump(newDict, newPath.open('w', encoding='utf8'))
         os.remove(ACTIVE_SETTINGS_PATH)
         os.symlink(newPath, ACTIVE_SETTINGS_PATH)
         self.log("Successfully set up new InternetSteuerung with the transmitted motor config!")

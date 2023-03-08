@@ -29,7 +29,7 @@ def handleMotorChange(obj, force = False):
     motorSetupController.load(obj, force=force)
     x = currentReply
     currentReply = ""
-    return currentReply
+    return x
 
 
 class HandleRequests(BaseHTTPRequestHandler):
@@ -73,13 +73,13 @@ class HandleRequests(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        self._set_headers("html")
-        # motorSetupController.current.log("Got a GET request")
-        self.wfile.write(
-           b"<!DOCTYPE html><html><body><h1>Tubemarine-Server</h1><p>This server is made to handle POST requests with Content-Type json. It should be a dictionary with the name of registered motors as keys and their new value as number</p></body></html>")
+        # self._set_headers("html")
+        # # motorSetupController.current.log("Got a GET request")
+        # self.wfile.write(
+        #    b"<!DOCTYPE html><html><body><h1>Tubemarine-Server</h1><p>This server is made to handle POST requests with Content-Type json. It should be a dictionary with the name of registered motors as keys and their new value as number</p></body></html>")
 
-        # self._set_headers("json")
-        # self.wfile.write(bytes(jsonpickle.encode(motorSetupController.currentDict), "utf-8"))
+        self._set_headers("json")
+        self.wfile.write(bytes(jsonpickle.encode(motorSetupController.currentDict), "utf-8"))
 
 
     def do_POST(self):  # when POST request reaches server this is called #asynchronously
