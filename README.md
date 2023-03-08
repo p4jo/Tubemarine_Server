@@ -13,7 +13,8 @@ python3 -m venv .venv
 ```
 You may want to replace `python3` with a working python installation (I think >=3.7 is required)
 ### Test
-Running `Steuerung.py` starts a console controller and allows you to test the motors
+Running `Steuerung.py` starts a console controller and allows you to test the motors.
+The `serverHTTPServer.py` contains the server-side application for the Tubemarine_Controller. By default it runs on port `6767`.
 ```
 cd /home/pi/Tubemarine_Server
 .venv/bin/python3 Steuerung.py
@@ -36,4 +37,23 @@ tail -f /home/pi/Internetsteuerung.log
 ```
 
 ## Configuration
-In `MotorConfigurations`. To see how it works, see `Motoren.py > loadMotorConfig` and the subclasses therein.
+In `MotorConfigurations`. To see how it works, see `Motoren.py > loadMotorConfig` and the subclasses of `Motor`.
+`active.json` should be a symlink to the currently active one and `default.json` can (in theory) be used after reset.
+
+## Structure of the program
+### Classes
+* Steuerung
+
+    The base class for classes that control motors and handle messages (`steuerung.schreiben` is a log function). It can be initialized with a dict of the type in `MotorConfigs`.
+    * InternetSteuerung
+
+        The `Steuerung` that runs headless and returns everything from its `onReceive` method
+    * KonsolenSteuerung
+
+        The `Steuerung` that can be used in the terminal (e.g. per SSH). Useful for testing.
+
+* Motor
+  
+## TODO
+* Visualisierung von Sensordaten
+* Regelung
