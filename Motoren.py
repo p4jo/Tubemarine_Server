@@ -171,6 +171,14 @@ class ServoESCMotor(ServoMotor):
                 "min" or "start" -> absVal_someUnit - potentiometer reports values in this range (or larger)
                 "max" or "end" -> absVal_someUnit
         """
+        if isinstance(minValue, str):
+            minValue = float(minValue.strip('abcdefghijklmnopqrstuvwxyz"\'µ')) # you can specify absolute positions (in whatever units)
+        if isinstance(maxValue, str):
+            minValue = float(maxValue.strip('abcdefghijklmnopqrstuvwxyz"\'µ'))
+        if isinstance(neutralValue, str):
+            minValue = float(neutralValue.strip('abcdefghijklmnopqrstuvwxyz"\'µ'))
+        
+                
         Motor.__init__(self, minValue, maxValue, inc = inc, neutralValue = neutralValue, steuerung = steuerung)
         self.xValLastCorrected = time.time() - 100000
         self.running = False
@@ -185,9 +193,6 @@ class ServoESCMotor(ServoMotor):
         self.equalThreshold = self.xInc / 3.0
         self.transitionWidth = self.xInc * 2
         self.xGoal = 0
-        self.start_cm = 0
-        self.end_cm = 1
-        self.slope = 2
         self.potentiometer = None
 
         if isinstance(sensorConfig, str):
@@ -195,35 +200,22 @@ class ServoESCMotor(ServoMotor):
 
         if sensorConfig is not None:
             for key in sensorConfig:
-                if 'max' in key or 'end' in key:
-                    self.end_cm = float(sensorConfig[key])
-                elif 'min' in key or 'start' in key:
-                    self.start_cm = float(sensorConfig[key])
-            if self.start_cm == self.end_cm:
-                self.steuerung.schreiben(f'start = end = {self.start_cm}(in absolute units in your sensor config). Set start to 0!')
-                self.start_cm = 0
-            self.slope = 2 / (self.end_cm - self.start_cm)
-            for key in sensorConfig:
-                if 'max' in key or 'end' in key or 'min' in key or 'start' in key:
-                    continue
                 try:
                     pin = int(key)
                 except:
-                    self.steuerung.schreiben(f"The keys of sensorConfig must be integers corresponding to pin numbers (or max, min). sensor Config was {sensorConfig}")
+                    self.steuerung.schreiben(f"The keys of sensorConfig must be integers corresponding to pin numbers. sensor Config was {sensorConfig}")
                     continue
                 c = str(sensorConfig[key])
-                c_stripped = c.strip('abcdefghijklmnopqrstuvwxyz') # you can specify absolute positions (in whatever units)
+                c_stripped = c.strip('abcdefghijklmnopqrstuvwxyz"\'µ') # you can specify absolute positions (in whatever units)
                 
                 try: # Interpret as pin for a limitSwitch
                     xVal = float(c_stripped)
                     if c_stripped != c:
-                        xVal = (xVal - self.start_cm)/(self.end_cm - self.start_cm)
+                        xVal = self._inverse_mapping(xVal)
                     self.limitSwitches.append(Schalter(pin=pin, callback=lambda: self.reachedValue(xVal)))
                 except:
-                    if '*' in c or 'p' in c or 'P' in c: # Interpret as pin for Potentiometer
-                        def callback(value):
-                            self.reachedValue(-1 + self.slope * (value - self.start_cm))
-                        self.potentiometer = Potentiometer(pin=pin, callback=callback)
+                    if '*' in c or 'p' in c or 'P' in c or 'v' in c or 'V'in c: # Interpret as pin for Potentiometer / voltmeter
+                        self.potentiometer = Potentiometer(pin=pin, callback=lambda value: self.reachedValue(self._inverse_mapping(value)))
                     else:
                         self.steuerung.schreiben(f"Couldn't understand sensor Config with key {key} and value {c}", 1)
 
