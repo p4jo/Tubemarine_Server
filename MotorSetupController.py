@@ -1,4 +1,4 @@
-from Steuerungen import InternetSteuerung
+from Steuerungen import InternetSteuerung, Steuerung
 import json
 from pathlib import Path
 import os
@@ -9,11 +9,16 @@ ACTIVE_SETTINGS_PATH = CONFIGS_PATH / 'active.json'
 STANDARD_SETTINGS_PATH = CONFIGS_PATH  / 'default.json'
 
 class MotorSetupController:
-
-
     def __init__(self, cls=InternetSteuerung, log=print):
-        # TODO check if is subclass of Steuerung
+        global ACTIVE_SETTINGS_PATH
+        assert issubclass(cls, Steuerung)
+        if not ACTIVE_SETTINGS_PATH.is_file():
+            if STANDARD_SETTINGS_PATH.is_file():
+                ACTIVE_SETTINGS_PATH = STANDARD_SETTINGS_PATH
+            else:
+                raise Exception(f"Active and standard settings paths are broken: {ACTIVE_SETTINGS_PATH}, {STANDARD_SETTINGS_PATH}")
         self.currentDict = json.loads(open(ACTIVE_SETTINGS_PATH, encoding="utf8").read())
+            
         self.current = cls(initializeMotors=self.currentDict)
         self.cls = cls
         self.log = log
