@@ -58,7 +58,7 @@ def handleMotorChange(obj, force = False):
 @click.option("--log-level","--loglevel","-L","-l", default=6)
 @click.option('--sleep', '-s', default=0)
 @click.option('-http', is_flag=True)
-def run(log_level=6, sleep=0, http):
+def run(log_level=6, sleep=0, http=False):
     time.sleep(sleep)
     global motorSetupController
     motorSetupController = MotorSetupController(log=addToCurrentReply)
