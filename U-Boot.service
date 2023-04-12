@@ -1,0 +1,15 @@
+[Unit]
+Description=U-Boot Server
+After=network.target
+StartLimitIntervalSec=10
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+#User=pi
+ExecStart=/home/pi/Tubemarine_Server/.venv/bin/py /home/pi/Tubemarine_Server/Server.py -l 5 -s 60
+
+
+[Install]
+WantedBy=multi-user.target
