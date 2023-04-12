@@ -1,17 +1,19 @@
 {
   "Links": {
     "type": "ESC",
-    "servoID": 8,
-    "backwardValue": 0.2,
-    "forwardValue": -0.2,
-    "minimalDeviation": 0.06
+    "servoID": 8.0,
+    "backwardValue": 0.3,
+    "neutralValue": 0.0,
+    "forwardValue": -0.5,
+    "minimalDeviation": 0.07
   },
   "Rechts": {
     "type": "ESC",
-    "servoID": 0,
-    "backwardValue": -0.2,
-    "forwardValue": 0.2,
-    "minimalDeviation": 0.06
+    "servoID": 15.0,
+    "backwardValue": -0.5,
+    "neutralValue": 0.0,
+    "forwardValue": 0.5,
+    "minimalDeviation": 0.07
   },
   "Lenkung": {
     "type": "steering",
@@ -25,15 +27,11 @@
   },
   "Auftriebsmotor": {
     "type": "ESC",
-    "servoID": 10,
+    "servoID": 0.0,
     "backwardValue": 0.4,
-    "forwardValue": -0.4,
-    "neutralValue": 0,
+    "forwardValue": -1.0,
+    "neutralValue": "",
     "minimalDeviation": 0.2
-  },
-  "Lampenmotor":{
-    "type": "ESC",
-    "servoID": 11
   },
   "Auftrieb": {
     "type": "ServoESC",
@@ -42,12 +40,14 @@
     "maxValue": 7.9,
     "sensorConfig": "{ \"16\": -1.0, \"20\": 0.0, \"21\": 1.0, \"0\": \"*\" }",
     "vMax": 0.0714,
-    "DontTrustZeroOfMotor": false
+    "DontTrustZeroOfMotor": false,
+    "neutralValue": ""
   },
   "Kamera": {
     "type": "Servo",
-    "servoID": 12,
-    "minValue": 180,
-    "maxValue": 0
+    "servoID": 12.0,
+    "minValue": 180.0,
+    "maxValue": 0.0,
+    "neutralValue": ""
   }
 }

@@ -3,4 +3,5 @@ __pycache__
 .vscode
 .venv
 test.py
-MotorConfigs/Config*
+MotorConfigs/*
+!MotorConfigs/default.json
