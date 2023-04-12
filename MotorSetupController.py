@@ -49,7 +49,7 @@ class MotorSetupController:
         self.current.schreiben("RESTARTED WITH NEW MOTOR CONFIG. ")
         self.current.schreiben("New config: " + str(newDict), 3)
         newPath = CONFIGS_PATH / datetime.datetime.now().strftime('Config %Y.%m.%d_%H_%M_%S.json')
-        json.dump(newDict, newPath.open('w', encoding='utf8'))
+        json.dump(self.currentDict, newPath.open('w', encoding='utf8'))
         os.remove(ACTIVE_SETTINGS_PATH)
         os.symlink(newPath, ACTIVE_SETTINGS_PATH)
         self.log("Successfully set up new InternetSteuerung with the transmitted motor config!")

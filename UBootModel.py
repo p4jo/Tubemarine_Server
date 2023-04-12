@@ -45,16 +45,23 @@ class Motor(object):
 
         if backwardValue is None or backwardValue == '':
             backwardValue = -1.0
+        else:
+            backwardValue = float(backwardValue)
         if forwardValue is None or forwardValue == '':
-            forwardValue = -1.0
-        self.minimalDeviation = abs(minimalDeviation or 0.0)
-
-        signum = (1 if forwardValue >= backwardValue else -1)
-
+            forwardValue = 1.0
+        else:
+            forwardValue = float(forwardValue)
+        if minimalDeviation is None or minimalDeviation == '':
+            minimalDeviation = 0.0
+        else:
+            minimalDeviation = float(minimalDeviation)
         if neutralValue is None or neutralValue == '':
             self.neutralValue = (forwardValue + backwardValue) / 2
         else:
-            self.neutralValue = neutralValue
+            self.neutralValue = float(neutralValue)
+
+        signum = (1 if forwardValue >= backwardValue else -1)
+        self.minimalDeviation = abs(minimalDeviation)
 
         self.neutralPlus = self.neutralValue + signum * self.minimalDeviation
         self.neutralMinus = self.neutralValue - signum * self.minimalDeviation
