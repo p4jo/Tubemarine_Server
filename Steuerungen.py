@@ -208,12 +208,13 @@ class InternetSteuerung(Steuerung):
             self.currentLog += text.strip() + '\n'
 
     def __init__(self, motoren=None, initializeMotors=None):
-        super().__init__(motoren = motoren, initializeMotors = initializeMotors)
         self.running = True
         self.oldData = dict()
         self.lastSentTime = dict()
 
         self.currentLog = ""
+        
+        super().__init__(motoren = motoren, initializeMotors = initializeMotors)
 
         self.lastConnectionTime = time.time() + 10
         self.waitingForLostConnectionThread: Optional[Thread] = Thread(target = self.run_async)
