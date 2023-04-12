@@ -68,7 +68,7 @@ except Exception as exception:
 
 class Ina3221ThreeCellLipoAkkumesser:
 
-    minAll_V = 11.4
+    minAll_V = 10.8
     maxAll_V = 12.4
     diffAll_V = maxAll_V - minAll_V
     minSingle_V = 3.5
@@ -423,7 +423,7 @@ if __name__ == "__main__":
         elif i == "1":
             Lagesensor_Test()
         elif i == "2":
-
+            print(f"Akkustand: {Akkumesser.akkustand() * 100:F2.0}")
             print(f"Gemeldete Spannungen: {Akkumesser.rawVoltages()}")
             print("Spannungen der Akkuzellen:", Akkumesser.cellVoltages())
             print(f"Es sollte je zwischen {Akkumesser.minSingle_V} und {Akkumesser.maxSingle_V} V liegen.")

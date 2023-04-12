@@ -33,7 +33,7 @@ class ESCMotor(Motor):
         self.slowTarget = 0.0 # not active yet
         try:
             # Sollte Fehler schmeißen, wenn servoID nicht 0 bis 15 ist.
-            self.motor = PhysicalMotors.continuous_servo[servoID]
+            self.motor = PhysicalMotors.continuous_servo[int(servoID)]
         except ZeroDivisionError:
             print("ES GAB EINEN INTERNEN FEHLER BEIM SETZEN VON WERTEN FÜR DEN ADAFRUIT CONTROLLER")
             self.motor = DummyMotorInterface()
@@ -128,7 +128,7 @@ class ServoMotor(Motor):
     def __init__(self, servoID: int, minValue: float, maxValue: float, neutralValue: Optional[float] = None, inc: Optional[float] = None, steuerung = None, **_):
         super().__init__(minValue, maxValue, inc = inc, neutralValue = neutralValue, steuerung = steuerung)
         try:
-            self.motor = PhysicalMotors.servo[servoID]  # Sollte Fehler schmeißen, wenn servoID nicht 0 bis 15 ist.
+            self.motor = PhysicalMotors.servo[int(servoID)]  # Sollte Fehler schmeißen, wenn servoID nicht 0 bis 15 ist.
         except ZeroDivisionError:
             print("ES GAB EINEN INTERNEN FEHLER BEIM SETZEN VON WERTEN FÜR DEN ADAFRUIT CONTROLLER")
             self.motor = DummyMotorInterface()
@@ -148,6 +148,7 @@ class ServoMotor(Motor):
         self.xVal = self._inverse_mapping(self.motor.angle)
 
     def stop(self):
+        self.motor.angle = None
         pass
         # self.motor.angle = self.motor.angle
 
@@ -156,34 +157,42 @@ class ServoESCMotor(ServoMotor):
     """Soll wie ServoMotor verwendet werden können, ist aber ein ESCMotor. Muss Position aus der Zeit erraten, die es sich dreht. Braucht Endschalter  # Braucht vielleicht einen neutrale Stellung-Schalter (für die Pumpen)"""
     minUpdateTime = 0.002
     maxUpdateTime = 1.0 / 60
-    # xGoal: float
-    # vMax: float # Maximum velocity dx/dt / (1/s)
-    # motor: ESCMotor
+    
     def __init__(self, motor: ESCMotor, sensorConfig: dict = None, minValue: float = -1.0,
                  maxValue: float = 1.0, inc=None, neutralValue: Optional[float] = None,
                  vMax=0.1, DontTrustZeroOfMotor = False, steuerung = None, **_
                  ):
         """
-            servoID is the id of the actual motor on Adafruit, 
-            limitSwitchesConfig is a dict: 
+            – servoID is the id of the actual motor on Adafruit, 
+            - limitSwitchesConfig is a dict: 
                 pin -> xVal where pin is the GPIO pin of a switch and xVal is the value that this ServoESCMotor is on when the switch is activated.
-                pin -> "*", "poti" etc. stands for a Potentiometer (Voltmeter pin {pin}) with xVal <-> potentiometer.value of -1 <-> {min}, 1 <-> {max}
-                "min" or "start" -> absVal_someUnit - potentiometer reports values in this range (or larger)
-                "max" or "end" -> absVal_someUnit
+                pin -> "*", "poti" etc. stands for a Potentiometer (Voltmeter pin {pin}) with xVal <-> potentiometer.value of -1 <-> {minValue}, 1 <-> {maxValue}
+                The xVal can also be delivered with a unit -> then it gets interpreted as a value between minValue and maxValue
+            - xGoal: float
+            - vMax: float # Maximum velocity dValue/dt / (1/s) 
+            If vMax is delivered with a unit, then it is interpreted as value/s, i.e. will be divided by maxValue-minValue
+            - motor: ESCMotor
         """
         if isinstance(minValue, str):
-            minValue = float(minValue.strip('abcdefghijklmnopqrstuvwxyz"\'µ')) # you can specify absolute positions (in whatever units)
+            minValue = float(minValue.strip('abcdefghijklmnopqrstuvwxyz"\'µ') or 0) # you can specify absolute positions (in whatever units)
         if isinstance(maxValue, str):
-            minValue = float(maxValue.strip('abcdefghijklmnopqrstuvwxyz"\'µ'))
-        if isinstance(neutralValue, str):
-            minValue = float(neutralValue.strip('abcdefghijklmnopqrstuvwxyz"\'µ'))
+            maxValue = float(maxValue.strip('abcdefghijklmnopqrstuvwxyz"\'µ') or 0)
+        if isinstance(neutralValue, str) and neutralValue != '':
+            neutralValue = float(neutralValue.strip('abcdefghijklmnopqrstuvwxyz"\'µ'))
         
                 
         Motor.__init__(self, minValue, maxValue, inc = inc, neutralValue = neutralValue, steuerung = steuerung)
         self.xValLastCorrected = time.time() - 100000
         self.running = False
         self.passive = False
-        self.vMax = vMax
+        if isinstance(vMax, str):
+                vMax_stripped = vMax.strip('abcdefghijklmnopqrstuvwxyz"\'µ/') or 0
+                if vMax != vMax_stripped:
+                    self.vMax = float(vMax_stripped) / (maxValue - minValue)
+                else:
+                    self.vMax = float(vMax)
+        else:
+            self.vMax = vMax
         self.DontTrustZeroOfMotor = DontTrustZeroOfMotor
         self.motor = motor
         self.thread= None
@@ -379,7 +388,10 @@ def loadMotorConfig(steuerung, config: Dict[str, Dict[str, str]]):
         # noinspection PyTypeChecker
         motorName = c['motor']
         c['motor'] = res[c['motor']] # BAD! DO NOT CHANGE c, IT GETS RETURNED TO THE APP!!
-        res[name] = ServoESCMotor(steuerung=steuerung, **c)
-        c['motor'] = motorName
+        try:
+            res[name] = ServoESCMotor(steuerung=steuerung, **c)
+        finally:
+            c['motor'] = motorName
+        
 
     return res
