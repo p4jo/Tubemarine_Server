@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            const websocket = new WebSocket("ws://pi-uboot:6767/");
+            debugger;
+            websocket.send('test');
+            websocket.addEventListener("message", ev => console.log(ev.data ));
+        </script>
+    </head>
+</html>

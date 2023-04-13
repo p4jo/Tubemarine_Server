@@ -97,7 +97,11 @@ class Ina3221ThreeCellLipoAkkumesser:
 
         cellHealth = [min((v - self.minSingle_V) / self.diffSingle_V, 1) for v in cells]
 
-        return totalHealth - self.penaltyLowSingle * sum([self.tooLowThresholdSingle - s for s in cellHealth if s < self.tooLowThresholdSingle])
+        res = totalHealth - self.penaltyLowSingle * sum([self.tooLowThresholdSingle - s for s in cellHealth if s < self.tooLowThresholdSingle])
+        if res < -0.4:
+            print("Critically low battery")
+            os.execv('shutdown')
+        return res
 
     def __init__(self, device):
         self.device = device
