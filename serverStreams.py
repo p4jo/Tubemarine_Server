@@ -3,6 +3,7 @@ import websockets
 import asyncio
 
 async def handler(websocket):
+    logFunction("Got new connection.")
     while True:
         try:
             content = await websocket.recv()
@@ -15,8 +16,9 @@ async def handler(websocket):
         #############################
         try:
             reply_encoded = jsonpickle.encode(reply)
-            websocket.send(reply_encoded)
+            await websocket.send(reply_encoded)
         except websockets.ConnectionClosedOK:
+            logFunction('Connection closed. "ok"')
             break
 
 async def main(port):

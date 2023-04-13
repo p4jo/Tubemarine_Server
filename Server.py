@@ -69,7 +69,7 @@ def run(log_level=6, sleep=0, http=False):
         from serverStreams import run_forever
 
     try:
-        run_forever(PORT, motorSetupController.current.schreiben)
+        run_forever(PORT, handle_function=handle, log_function=motorSetupController.current.schreiben)
     except KeyboardInterrupt:
         print("Closed by KeyboardInterrupt")
         if motorSetupController and motorSetupController.current:

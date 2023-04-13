@@ -423,7 +423,7 @@ if __name__ == "__main__":
         elif i == "1":
             Lagesensor_Test()
         elif i == "2":
-            print(f"Akkustand: {Akkumesser.akkustand() * 100:F2.0}")
+            print(f"Akkustand: {Akkumesser.akkustand() * 100:2.0f}%")
             print(f"Gemeldete Spannungen: {Akkumesser.rawVoltages()}")
             print("Spannungen der Akkuzellen:", Akkumesser.cellVoltages())
             print(f"Es sollte je zwischen {Akkumesser.minSingle_V} und {Akkumesser.maxSingle_V} V liegen.")
