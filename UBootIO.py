@@ -18,9 +18,10 @@ LagesensorAddress = 0x29
 VoltmeterAddress = 0x48
 VoltmeterGain = 1.0 # default 1
 VoltmeterPotentiometerPin = 0 # 0..3
-VoltmeterWatchInterval_s = 0.3
+VoltmeterWatchInterval_s = 0.25
 VoltmeterSampleRate_Hz = 64 # 8..860, default 128
 VoltmeterWatchThreshold_cm = 0.15
+ignoreLowBattery = False
 
 #endregion
 try:
@@ -98,9 +99,9 @@ class Ina3221ThreeCellLipoAkkumesser:
         cellHealth = [min((v - self.minSingle_V) / self.diffSingle_V, 1) for v in cells]
 
         res = totalHealth - self.penaltyLowSingle * sum([self.tooLowThresholdSingle - s for s in cellHealth if s < self.tooLowThresholdSingle])
-        if res < -0.4:
+        if not ignoreLowBattery and res < -0.4:
             print("Critically low battery")
-            os.execv('shutdown')
+            os.system('sudo shutdown')
         return res
 
     def __init__(self, device):
@@ -251,6 +252,12 @@ Ausrichtung: {Lagesensor.euler}
 Magnetfeld: {Lagesensor.magnetic} μT
 Temperatur: {Lagesensor.temperature} °C
 """)
+
+class LagesensorWatcher(Wertüberwacher):
+    def __init__(self, name, callback=None):
+        super().__init__(name, callback)
+
+
 #endregion
 
 #region Potentiometer-Spannungssensor
@@ -341,7 +348,6 @@ class Potentiometer(Wertüberwacher):
 
     def voltage(self):
         return self.Voltmeter.voltage
-
 
 def PotentiometerTest():
     print("Gebe Potentiometer-Nummer (pin) zum Testen ein: ")

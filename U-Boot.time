@@ -1,0 +1,6 @@
+[Unit]
+Description=Autostart after 40 s for U-Boot service
+[Timer]
+OnStartupSec=40
+[Install]
+WantedBy=default.target

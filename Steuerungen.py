@@ -16,6 +16,7 @@ lineEnd = '\n\r'
 
 import math
 DEG_INV = 180 /  math.pi
+SENSOR_UPDATE_TIME = 0.5
 
 class Steuerung(object):
     """Basisklasse für die Steuerung von Motoren und die Textausgabe"""
@@ -281,15 +282,18 @@ class InternetSteuerung(Steuerung):
     def run_async(self):
         try:
             while self.running:
-                waitTime =  self.lastConnectionTime + self.lostConnectionTimeout - time.time()
-                if waitTime > 1E-5:
-                    time.sleep(waitTime)
+                timeUntilDisconnectTimeout =  self.lastConnectionTime + self.lostConnectionTimeout - time.time()
+                if timeUntilDisconnectTimeout > 1E-5:
+                    # time.sleep(timeUntilDisconnectTimeout)
                     # await asyncio.sleep(waitTime)
+                    pass
                 else:
                     self.OnLostConnection()
                     self.lastConnectionTime = time.time()
                     # time.sleep(self.lostConnectionTimeout)
                     # await asyncio.sleep(waitTime)
+                time.sleep(min(timeUntilDisconnectTimeout, SENSOR_UPDATE_TIME))
+                self.sensor
         except:
             self.stop()
             # await self.run_async()

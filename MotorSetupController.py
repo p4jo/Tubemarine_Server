@@ -11,7 +11,7 @@ STANDARD_SETTINGS_PATH = CONFIGS_PATH  / 'default.json'
 class MotorSetupController:
     def __init__(self, cls=InternetSteuerung, log=print):
         global ACTIVE_SETTINGS_PATH
-        assert issubclass(cls, Steuerung)
+        # assert issubclass(cls, Steuerung)
         if not ACTIVE_SETTINGS_PATH.is_file():
             if STANDARD_SETTINGS_PATH.is_file():
                 ACTIVE_SETTINGS_PATH = STANDARD_SETTINGS_PATH
