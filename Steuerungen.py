@@ -157,10 +157,9 @@ class Konsolensteuerung(Steuerung):
                     self.schreiben(e)
                     time.sleep(1)
         except KeyboardInterrupt:
-            pass
-        self.schreiben("Abgebrochen durch Strg-C")
-        self.stopAndQuit()
-        exit(0)
+            self.schreiben("Abgebrochen durch Strg-C")
+            self.stopAndQuit()
+            exit(0)
 
     def updateScreen(self):
         clearConsoleScreen()

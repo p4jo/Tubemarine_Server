@@ -21,8 +21,8 @@ def handle(d):
     if message == 'GET_MOTOR_SETTINGS':
         d.pop('message')
         motorSetupController.current.schreiben('Loading current motor settings', 3)
-        motorSetupController.current.schreiben('Current motor settings: ' + str(motorSetupController.currentDict), 5)
-        return motorSetupController.currentDict
+        motorSetupController.current.schreiben('Current motor settings: ' + str(motorSetupController.newDict), 5)
+        return motorSetupController.newDict
     if message == 'SET_MOTOR_SETTINGS':
         d.pop('message')
         return handleMotorChange(d, False)
